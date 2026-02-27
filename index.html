@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElementalS — Redox-Mediated Catalytic H₂S Splitting</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #05080e;
+  --bg2:      #080c15;
+  --surface:  #0c1220;
+  --surface2: #111826;
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.11);
+  --amber:    #f5a623;
+  --amber2:   #e8890a;
+  --amber-glow: rgba(245,166,35,0.15);
+  --blue:     #38c9ff;
+  --blue2:    #0aabee;
+  --green:    #2dd4a0;
+  --text:     #ccd9e8;
+  --muted:    #5e7590;
+  --white:    #f0f6ff;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:'Outfit', sans-serif;
+  background:var(--bg); color:var(--text);
+  overflow-x:hidden; line-height:1.65;
+}
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-thumb { background:var(--amber); border-radius:2px; }
+
+/* ─── NAV ─── */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 4.5rem;
+  background:rgba(5,8,14,0.85);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+.logo { text-decoration:none; display:flex; align-items:center; gap:0; }
+.logo-word {
+  font-family:'Playfair Display', serif;
+  font-weight:900; font-size:1.4rem;
+  letter-spacing:-0.02em; color:var(--white);
+}
+/* Periodic table S badge */
+.logo-s {
+  display:inline-flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  width:32px; height:32px;
+  background:linear-gradient(145deg, var(--amber), var(--amber2));
+  border-radius:5px;
+  color:#000; font-family:'Outfit', sans-serif;
+  position:relative; margin-left:1px;
+  box-shadow:0 0 18px rgba(245,166,35,0.45);
+  vertical-align:middle; top:-1px;
+}
+.logo-s .s-atomnum {
+  position:absolute; top:2px; left:3px;
+  font-size:0.38rem; font-weight:700; color:rgba(0,0,0,0.55);
+}
+.logo-s .s-letter {
+  font-size:1rem; font-weight:800; line-height:1;
+}
+.logo-s .s-mass {
+  position:absolute; bottom:2px; right:2px;
+  font-size:0.33rem; font-weight:600; color:rgba(0,0,0,0.55);
+}
+.nav-links { display:flex; gap:2.2rem; list-style:none; align-items:center; }
+.nav-links a {
+  font-size:0.85rem; font-weight:500;
+  color:var(--muted); text-decoration:none; transition:color 0.2s;
+}
+.nav-links a:hover { color:var(--white); }
+.nav-cta {
+  padding:0.45rem 1.3rem; border:1px solid var(--amber);
+  border-radius:5px; color:var(--amber) !important; font-weight:600 !important;
+  transition:background 0.2s, color 0.2s !important;
+}
+.nav-cta:hover { background:var(--amber) !important; color:#000 !important; }
+
+/* ─── HERO ─── */
+#hero {
+  min-height:100vh; display:flex; align-items:center;
+  padding:9rem 4.5rem 5rem; position:relative; overflow:hidden;
+}
+.hero-glow {
+  position:absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 60% 55% at 72% 30%, rgba(245,166,35,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 18% 70%, rgba(56,201,255,0.06) 0%, transparent 60%);
+}
+.hero-dots {
+  position:absolute; inset:0;
+  background-image:radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+}
+.hero-content { position:relative; z-index:1; max-width:720px; }
+.hero-pill {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  padding:0.28rem 0.85rem;
+  background:rgba(245,166,35,0.07); border:1px solid rgba(245,166,35,0.2);
+  border-radius:100px; font-size:0.7rem; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--amber);
+  margin-bottom:1.8rem;
+  opacity:0; animation:fadeUp 0.55s 0.05s ease forwards;
+}
+.pill-dot {
+  width:5px; height:5px; border-radius:50%; background:var(--amber);
+  animation:blink 2.2s infinite;
+}
+h1 {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(2.8rem, 5.8vw, 5rem);
+  font-weight:900; line-height:1.07; letter-spacing:-0.03em;
+  margin-bottom:1.5rem;
+  opacity:0; animation:fadeUp 0.55s 0.18s ease forwards;
+}
+h1 em { font-style:italic; color:var(--amber); }
+h1 .h1-blue { color:var(--blue); }
+.hero-sub {
+  font-size:1.02rem; font-weight:300;
+  color:var(--muted); max-width:560px; line-height:1.85;
+  margin-bottom:2.4rem;
+  opacity:0; animation:fadeUp 0.55s 0.3s ease forwards;
+}
+.hero-sub strong { color:var(--text); font-weight:500; }
+.hero-btns {
+  display:flex; gap:1rem;
+  opacity:0; animation:fadeUp 0.55s 0.44s ease forwards;
+}
+.btn-p {
+  padding:0.8rem 2rem;
+  background:linear-gradient(135deg, var(--amber), var(--amber2));
+  color:#000; border:none; border-radius:6px;
+  font-family:'Outfit', sans-serif; font-size:0.92rem; font-weight:700;
+  cursor:pointer; text-decoration:none;
+  box-shadow:0 6px 22px rgba(245,166,35,0.22);
+  transition:opacity 0.2s, transform 0.2s;
+}
+.btn-p:hover { opacity:0.84; transform:translateY(-2px); }
+.btn-g {
+  padding:0.8rem 2rem; background:transparent;
+  border:1px solid var(--border2); border-radius:6px;
+  color:var(--text); font-family:'Outfit', sans-serif;
+  font-size:0.92rem; font-weight:500; cursor:pointer;
+  text-decoration:none; transition:border-color 0.2s, color 0.2s;
+}
+.btn-g:hover { border-color:var(--muted); color:var(--white); }
+
+/* Floating stat cards */
+.hero-kpis {
+  position:absolute; right:4.5rem; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:1.1rem; z-index:1;
+  opacity:0; animation:fadeFromRight 0.65s 0.55s ease forwards;
+}
+.kpi-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:1.1rem 1.4rem; min-width:185px;
+  position:relative; overflow:hidden;
+}
+.kpi-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.kpi-card.kpi-amber::after { background:var(--amber); }
+.kpi-card.kpi-blue::after  { background:var(--blue); }
+.kpi-card.kpi-green::after { background:var(--green); }
+.kpi-val {
+  font-family:'Playfair Display', serif;
+  font-size:1.9rem; font-weight:900; line-height:1; margin-bottom:0.25rem;
+}
+.kpi-card.kpi-amber .kpi-val { color:var(--amber); }
+.kpi-card.kpi-blue  .kpi-val { color:var(--blue); }
+.kpi-card.kpi-green .kpi-val { color:var(--green); }
+.kpi-lbl { font-size:0.75rem; color:var(--muted); line-height:1.4; }
+
+/* ─── SECTION COMMONS ─── */
+.sec-tag {
+  display:inline-block; font-size:0.68rem; font-weight:700;
+  letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--amber); margin-bottom:0.7rem;
+}
+h2 {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(1.9rem, 3.5vw, 2.8rem);
+  font-weight:800; letter-spacing:-0.025em; line-height:1.12;
+  margin-bottom:1rem; color:var(--white);
+}
+.sep { height:1px; background:linear-gradient(90deg,transparent,var(--border2),transparent); margin:0 4.5rem; }
+
+/* ─── PROBLEM ─── */
+#problem { background:var(--bg2); border-top:1px solid var(--border); padding:7rem 4.5rem; }
+.problem-wrap { display:grid; grid-template-columns:1fr 1fr; gap:5rem; max-width:1200px; margin:0 auto; align-items:start; }
+.prob-lead {
+  font-size:1rem; font-weight:300; color:var(--muted); line-height:1.85; margin-bottom:1.8rem;
+}
+.prob-lead strong { color:var(--text); font-weight:500; }
+.prob-cards { display:flex; flex-direction:column; gap:0.85rem; }
+.prob-card {
+  display:flex; gap:1rem; align-items:flex-start;
+  padding:1rem 1.2rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:10px;
+  transition:border-color 0.25s;
+}
+.prob-card:hover { border-color:rgba(245,166,35,0.22); }
+.prob-ico {
+  width:34px; height:34px; border-radius:8px; flex-shrink:0;
+  background:rgba(245,166,35,0.07);
+  display:flex; align-items:center; justify-content:center; font-size:0.95rem;
+}
+.prob-txt strong { display:block; font-size:0.88rem; color:var(--white); font-weight:600; margin-bottom:0.2rem; }
+.prob-txt span { font-size:0.8rem; color:var(--muted); line-height:1.55; }
+
+/* Flow box */
+.flow-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:1.8rem; position:relative; overflow:hidden;
+}
+.flow-box::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--amber), var(--blue));
+}
+.flow-caption {
+  font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:1.4rem;
+}
+.fn { display:flex; flex-direction:column; gap:0.45rem; align-items:center; }
+.fn-node {
+  width:100%; padding:0.7rem 1rem; border-radius:8px;
+  font-size:0.81rem; font-weight:500; text-align:center; line-height:1.4;
+}
+.fn-node small { font-size:0.7rem; opacity:0.65; display:block; margin-top:0.15rem; }
+.fn-input   { background:rgba(56,201,255,0.07); border:1px solid rgba(56,201,255,0.18); color:var(--blue); }
+.fn-process { background:rgba(245,166,35,0.06); border:1px solid rgba(245,166,35,0.18); color:var(--amber); }
+.fn-neutral { background:var(--surface2); border:1px solid var(--border2); color:var(--text); }
+.fn-arrow   { color:var(--muted); font-size:1rem; }
+.fn-row { display:grid; grid-template-columns:1fr 1fr; gap:0.45rem; width:100%; }
+.fn-out-a { background:rgba(245,166,35,0.07); border:1px solid rgba(245,166,35,0.22); color:var(--amber); }
+.fn-out-b { background:rgba(56,201,255,0.07);  border:1px solid rgba(56,201,255,0.22);  color:var(--blue); }
+.fn-footer {
+  margin-top:0.9rem; padding:0.55rem 1rem;
+  background:rgba(45,212,160,0.05); border-radius:6px;
+  text-align:center; font-size:0.72rem;
+  color:var(--green); font-weight:600; letter-spacing:0.04em; width:100%;
+}
+
+/* ─── TECHNOLOGY ─── */
+#technology { padding:7rem 4.5rem; }
+.tech-inner { max-width:1200px; margin:0 auto; }
+.tech-hdr { text-align:center; margin-bottom:3.5rem; }
+.tech-hdr p { font-size:1rem; font-weight:300; color:var(--muted); max-width:560px; margin:0.8rem auto 0; line-height:1.8; }
+.tech-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem; margin-bottom:3.5rem; }
+.tc {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:1.8rem;
+  transition:border-color 0.3s, transform 0.3s;
+}
+.tc:hover { border-color:rgba(245,166,35,0.28); transform:translateY(-4px); }
+.tc-num {
+  font-family:'Playfair Display', serif; font-size:3.2rem; font-weight:900;
+  color:rgba(245,166,35,0.08); line-height:1; margin-bottom:0.8rem;
+}
+.tc-ico {
+  width:40px; height:40px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem; margin-bottom:0.9rem;
+}
+.tc-ico.a { background:rgba(245,166,35,0.1); }
+.tc-ico.b { background:rgba(56,201,255,0.1); }
+.tc-ico.c { background:rgba(45,212,160,0.1); }
+.tc-title {
+  font-family:'Playfair Display', serif;
+  font-size:1rem; font-weight:700; color:var(--white); margin-bottom:0.7rem; line-height:1.3;
+}
+.tc-body { font-size:0.84rem; font-weight:300; color:var(--muted); line-height:1.72; }
+
+/* comparison */
+.cmp { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.cmp-hdr {
+  padding:1.3rem 1.8rem; border-bottom:1px solid var(--border);
+  font-family:'Playfair Display', serif; font-weight:700; font-size:1rem; color:var(--white);
+  display:flex; align-items:center; gap:0.8rem;
+}
+.cmp-hdr::before {
+  content:''; width:4px; height:18px; flex-shrink:0; border-radius:2px;
+  background:linear-gradient(to bottom, var(--amber), var(--blue));
+}
+table { width:100%; border-collapse:collapse; }
+thead { background:rgba(245,166,35,0.03); }
+th {
+  padding:0.75rem 1.1rem; text-align:left;
+  font-size:0.68rem; font-weight:700; letter-spacing:0.09em;
+  text-transform:uppercase; color:var(--muted);
+}
+td {
+  padding:0.95rem 1.1rem; font-size:0.82rem; color:var(--text);
+  border-top:1px solid var(--border); vertical-align:middle;
+}
+td strong { color:var(--white); }
+tr.hl td { background:rgba(245,166,35,0.035); }
+.badge {
+  display:inline-block; padding:0.2rem 0.6rem; border-radius:4px;
+  font-size:0.7rem; font-weight:600; white-space:nowrap;
+}
+.badge.g  { background:rgba(45,212,160,0.1);  color:var(--green); }
+.badge.b  { background:rgba(239,68,68,0.09);  color:#f87171; }
+.badge.n  { background:rgba(255,255,255,0.05); color:var(--muted); }
+.badge.am { background:rgba(245,166,35,0.1);  color:var(--amber); }
+.cmp-note {
+  padding:1rem 1.5rem; font-size:0.75rem; color:var(--muted);
+  border-top:1px solid var(--border); line-height:1.65; font-style:italic;
+}
+.cmp-note strong { color:var(--text); font-style:normal; }
+
+/* ─── ROADMAP ─── */
+#roadmap { background:var(--bg2); border-top:1px solid var(--border); padding:7rem 4.5rem; }
+.rm-inner { max-width:820px; margin:0 auto; }
+.rm-hdr { text-align:center; margin-bottom:3.5rem; }
+.rm-hdr p { font-size:1rem; font-weight:300; color:var(--muted); line-height:1.8; margin-top:0.6rem; }
+.timeline { position:relative; padding-left:1.8rem; }
+.timeline::before {
+  content:''; position:absolute; left:0; top:6px; bottom:0; width:1px;
+  background:linear-gradient(to bottom, var(--amber), rgba(245,166,35,0.05));
+}
+.tl-item { position:relative; padding:0 0 3rem 2.2rem; }
+.tl-dot {
+  position:absolute; left:-5px; top:5px;
+  width:11px; height:11px; border-radius:50%; background:var(--amber);
+  box-shadow:0 0 14px rgba(245,166,35,0.5);
+}
+.tl-yr {
+  font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--amber); margin-bottom:0.35rem;
+}
+.tl-title {
+  font-family:'Playfair Display', serif;
+  font-size:1.1rem; font-weight:700; color:var(--white); margin-bottom:0.5rem;
+}
+.tl-body { font-size:0.84rem; font-weight:300; color:var(--muted); line-height:1.72; max-width:540px; }
+
+/* ─── CONTACT ─── */
+#contact { padding:7rem 4.5rem; border-top:1px solid var(--border); }
+.ct-inner { max-width:640px; margin:0 auto; text-align:center; }
+.ct-inner > p { font-size:1rem; font-weight:300; color:var(--muted); line-height:1.8; }
+.ct-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:18px; padding:2.5rem; margin-top:2.5rem;
+  position:relative; overflow:hidden; text-align:left;
+}
+.ct-box::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, transparent 5%, var(--amber) 35%, var(--blue) 65%, transparent 95%);
+}
+.fg { margin-bottom:1rem; }
+label { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.06em; color:var(--muted); margin-bottom:0.38rem; text-transform:uppercase; }
+input, textarea, select {
+  width:100%; padding:0.7rem 0.95rem;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:8px; color:var(--text);
+  font-family:'Outfit', sans-serif; font-size:0.88rem;
+  transition:border-color 0.2s; outline:none;
+}
+input:focus, textarea:focus, select:focus { border-color:rgba(245,166,35,0.5); }
+select option { background:var(--bg2); }
+textarea { resize:vertical; min-height:100px; }
+.fg-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.btn-sub {
+  width:100%; padding:0.85rem;
+  background:linear-gradient(135deg, var(--amber), var(--amber2));
+  color:#000; border:none; border-radius:8px;
+  font-family:'Playfair Display', serif;
+  font-size:0.95rem; font-weight:800; cursor:pointer;
+  margin-top:0.4rem;
+  box-shadow:0 4px 20px rgba(245,166,35,0.18);
+  transition:opacity 0.2s, transform 0.2s;
+}
+.btn-sub:hover { opacity:0.83; transform:translateY(-1px); }
+.ok-msg {
+  display:none; margin-top:1rem; padding:0.9rem;
+  background:rgba(45,212,160,0.07); border:1px solid rgba(45,212,160,0.2);
+  border-radius:8px; color:var(--green); font-size:0.88rem; text-align:center;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  border-top:1px solid var(--border); padding:1.8rem 4.5rem;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.ft-logo { text-decoration:none; }
+.ft-copy { font-size:0.75rem; color:var(--muted); }
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeFromRight {
+  from { opacity:0; transform:translate(20px,-50%); }
+  to   { opacity:1; transform:translate(0,-50%); }
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+.reveal { opacity:0; transform:translateY(26px); transition:opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+@media(max-width:900px){
+  nav { padding:1rem 1.5rem; }
+  .nav-links { display:none; }
+  #hero, #problem, #technology, #roadmap, #contact { padding:5rem 1.5rem; }
+  .hero-kpis { display:none; }
+  .problem-wrap, .tech-grid, .fg-row { grid-template-columns:1fr; gap:1.5rem; }
+  footer { flex-direction:column; gap:0.8rem; text-align:center; }
+  .sep { margin:0 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <span class="logo-word">Elemental</span><span class="logo-s">
+      <span class="s-atomnum">16</span>
+      <span class="s-letter">S</span>
+      <span class="s-mass">32.1</span>
+    </span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">The Problem</a></li>
+    <li><a href="#technology">Technology</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contact" class="nav-cta">Contact Us</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-dots"></div>
+  <div class="hero-content">
+    <div class="hero-pill"><div class="pill-dot"></div>Industrial Deep Tech · Refinery Decarbonisation · TRL 3–4</div>
+    <h1>
+      <em>Redox-Mediated</em><br>
+      Catalytic H₂<span class="h1-blue">S</span> Splitting<br>
+      <span style="font-size:0.65em; font-weight:700; color:var(--blue); font-style:normal;">into Green H₂ and Saleable Elemental Sulfur</span>
+    </h1>
+    <p class="hero-sub">
+      Every refinery burns its hydrogen sulfide in a Claus unit — destroying the embedded hydrogen
+      and emitting SO₂. <strong>ElementalS</strong> replaces this century-old combustion process with a
+      redox-mediated catalytic platform that recovers green hydrogen and high-purity elemental sulfur
+      from the same acid gas stream. No combustion. No SO₂. No CO₂.
+    </p>
+    <div class="hero-btns">
+      <a href="#technology" class="btn-p">Explore the Technology</a>
+      <a href="#contact" class="btn-g">Get in Touch →</a>
+    </div>
+  </div>
+  <div class="hero-kpis">
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-val">~80%</div>
+      <div class="kpi-lbl">Less electricity<br>vs. PEM water electrolysis</div>
+    </div>
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-val">Zero</div>
+      <div class="kpi-lbl">SO₂ emissions —<br>no combustion step</div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-val">TRL 3–4</div>
+      <div class="kpi-lbl">Catalyst validated<br>Full TEA completed</div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="problem-wrap">
+    <div class="reveal">
+      <div class="sec-tag">The Problem</div>
+      <h2>Refineries burn the hydrogen they should be recovering</h2>
+      <p class="prob-lead">
+        The Claus process — standard in every refinery worldwide — combusts H₂S to recover sulfur.
+        In doing so, it <strong>destroys embedded hydrogen</strong>, emits SO₂, and forces the same
+        refinery to purchase SMR hydrogen at significant cost and carbon penalty.
+        This is a structural inefficiency hiding in plain sight.
+      </p>
+      <div class="prob-cards">
+        <div class="prob-card">
+          <div class="prob-ico">🔥</div>
+          <div class="prob-txt">
+            <strong>Claus Process — A Century of Wasted Hydrogen</strong>
+            <span>H₂S is combusted as fuel. The hydrogen inside is destroyed, SO₂ is emitted, and tail gas must be incinerated. The gold standard — but one that destroys value on every barrel processed.</span>
+          </div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-ico">💧</div>
+          <div class="prob-txt">
+            <strong>Liquid Redox Systems — Zero SO₂, Zero Value Creation</strong>
+            <span>Technologies like LO-CAT, SulFerox, and Unisulf eliminate SO₂ without combustion — but they still destroy the hydrogen and produce low-quality sulfur that cannot be sold commercially.</span>
+          </div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-ico">⚡</div>
+          <div class="prob-txt">
+            <strong>Water Electrolysis — Wrong Feedstock, High Cost</strong>
+            <span>Green H₂ from water requires ~50–55 kWh/kg and ignores the H₂S stream entirely. Claus keeps running. SO₂ keeps flowing. Two separate cost centres where one should replace both.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="flow-box">
+        <div class="flow-caption">ElementalS — Process Architecture</div>
+        <div class="fn">
+          <div class="fn-node fn-input">INPUT — H₂S Acid Gas Stream + Renewable Electricity</div>
+          <div class="fn-arrow">↓</div>
+          <div class="fn-node fn-process">Redox-Mediated Oxidation Reactor<small>H₂S → Elemental Sulfur + Reduced Mediator</small></div>
+          <div class="fn-arrow">↓</div>
+          <div class="fn-node fn-neutral">Proprietary Sulfur Separation Unit</div>
+          <div class="fn-arrow">↓</div>
+          <div class="fn-row">
+            <div class="fn-node fn-process" style="font-size:0.75rem;">Electrochemical Mediator Regeneration<small>← electricity input here only</small></div>
+            <div class="fn-node fn-process" style="font-size:0.75rem;">Heterogeneous Catalyst HER Reactor<small>H₂ evolves off-field, no CO₂</small></div>
+          </div>
+          <div class="fn-arrow">↓</div>
+          <div class="fn-row">
+            <div class="fn-node fn-out-a">🟡 Saleable Sulfur<small>High-purity product</small></div>
+            <div class="fn-node fn-out-b">🟢 Green Hydrogen<small>Refinery H₂ network</small></div>
+          </div>
+          <div class="fn-footer">No combustion · No SO₂ · No CO₂ · Closed-loop mediator</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECHNOLOGY -->
+<section id="technology">
+  <div class="tech-inner">
+    <div class="tech-hdr reveal">
+      <div class="sec-tag">Technology</div>
+      <h2>A Three-Stage Catalytic Architecture</h2>
+      <p>ElementalS decouples H₂S oxidation, sulfur recovery, and hydrogen evolution into three distinct, optimised unit operations — each engineered for industrial robustness, operational continuity, and drop-in refinery integration.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tc reveal">
+        <div class="tc-num">01</div>
+        <div class="tc-ico a">⚗️</div>
+        <div class="tc-title">H₂S Oxidation &amp; Sulfur Recovery</div>
+        <div class="tc-body">H₂S from the refinery acid gas stream contacts an oxidising redox mediator in a liquid-phase absorption reactor. The mediator selectively oxidises H₂S to elemental sulfur — no combustion, no SO₂. Sulfur is recovered through a <strong style="color:var(--amber)">proprietary solid-liquid separation system</strong> yielding high-purity, commercially saleable S₈ — a critical differentiator over conventional liquid redox systems such as LO-CAT and SulFerox, which cannot produce saleable sulfur. The reduced mediator exits to the electrochemical stack.</div>
+      </div>
+      <div class="tc reveal">
+        <div class="tc-num">02</div>
+        <div class="tc-ico b">🔬</div>
+        <div class="tc-title">Electrochemical Mediator Regeneration</div>
+        <div class="tc-body">The two spent mediators — anodic and cathodic — are simultaneously regenerated in a redox flow electrochemical cell powered by renewable electricity. Because H₂S oxidation is thermodynamically far easier than water splitting, the cell operates at significantly lower voltage — targeting <strong style="color:var(--green)">~10–15 kWh/kg H₂</strong> at system level versus ~53 kWh/kg for commercial PEM water electrolysis: approximately <strong style="color:var(--green)">80% less electricity</strong>. All electricity input is confined to this step only.</div>
+      </div>
+      <div class="tc reveal">
+        <div class="tc-num">03</div>
+        <div class="tc-ico c">🔋</div>
+        <div class="tc-title">Catalytic H₂ Evolution — Off-Field</div>
+        <div class="tc-body">The cathodically regenerated mediator flows over a fixed-bed heterogeneous catalyst reactor where hydrogen evolves entirely off-field — driven by catalysis, not electrochemical potential. No electricity required here. ElementalS is actively developing <strong style="color:var(--amber)">low-PGM and non-PGM heterogeneous catalysts</strong> for this step — eliminating platinum-group metal dependency, reducing system cost, and building proprietary IP advantage over the published system architecture.</div>
+      </div>
+    </div>
+
+    <div class="cmp reveal">
+      <div class="cmp-hdr">Technology Comparison — Industrial H₂S Management Pathways</div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>H₂ Recovery</th>
+            <th>Saleable Sulfur</th>
+            <th>SO₂ Emissions</th>
+            <th>CO₂ Reduction</th>
+            <th>Feedstock Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Claus Process</strong><br><small style="color:var(--muted)">Standard SRU</small></td>
+            <td><span class="badge b">None — H₂ destroyed</span></td>
+            <td><span class="badge g">Yes</span></td>
+            <td><span class="badge b">High — combustion</span></td>
+            <td><span class="badge b">None</span></td>
+            <td><span class="badge g">Waste stream</span></td>
+          </tr>
+          <tr>
+            <td><strong>Liquid Redox SRU</strong><br><small style="color:var(--muted)">Unisulf, LO-CAT, SulFerox, Sulfolin, Hiperion</small></td>
+            <td><span class="badge b">None — H₂ not recovered</span></td>
+            <td><span class="badge n">Low quality — unsaleable</span></td>
+            <td><span class="badge g">Zero — no combustion</span></td>
+            <td><span class="badge b">None — SMR unchanged</span></td>
+            <td><span class="badge g">Waste stream</span></td>
+          </tr>
+          <tr>
+            <td><strong>Claus + Green H₂</strong><br><small style="color:var(--muted)">Claus SRU + PEM Water Electrolysis</small></td>
+            <td><span class="badge b">No recovery — H₂ from water, not H₂S</span></td>
+            <td><span class="badge g">Yes (Claus)</span></td>
+            <td><span class="badge b">High — Claus still runs</span></td>
+            <td><span class="badge n">Partial — SMR displaced</span></td>
+            <td><span class="badge b">Pure water + high electricity</span></td>
+          </tr>
+          <tr>
+            <td><strong>SMR + CCS + Claus</strong><br><small style="color:var(--muted)">Conventional refinery baseline</small></td>
+            <td><span class="badge b">No — H₂ from methane, not H₂S</span></td>
+            <td><span class="badge g">Yes (Claus)</span></td>
+            <td><span class="badge b">High — Claus combustion</span></td>
+            <td><span class="badge n">Reduced — CCS partial</span></td>
+            <td><span class="badge b">Natural gas + CCS cost</span></td>
+          </tr>
+          <tr class="hl">
+            <td><strong>ElementalS</strong><br><small style="color:var(--amber)">Redox-Mediated Catalytic H₂S Splitting</small></td>
+            <td><span class="badge g">Yes — catalytic H₂ evolution</span></td>
+            <td><span class="badge am">Yes — proprietary separation</span></td>
+            <td><span class="badge g">Zero — no combustion</span></td>
+            <td><span class="badge g">Yes — SMR displaced</span></td>
+            <td><span class="badge g">Waste stream + low energy</span></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="cmp-note">
+        The conventional baseline (SMR + CCS + Claus) produces hydrogen from methane while Claus continues destroying the embedded hydrogen in acid gas. Liquid redox systems eliminate SO₂ but recover no hydrogen and produce low-quality unsaleable sulfur.
+        <strong>ElementalS is the only pathway combining zero SO₂, catalytic green H₂ recovery from H₂S, and high-purity saleable sulfur from a single acid gas feed — enabled by a proprietary sulfur separation system that liquid redox competitors cannot match.</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="rm-inner">
+    <div class="rm-hdr reveal">
+      <div class="sec-tag">Roadmap</div>
+      <h2>Scale Path to Industrial Deployment</h2>
+      <p>From validated bench science to licensed refinery technology — a 3–5 year pathway built for industrial partner collaboration.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <div class="tl-yr">2025 — 2026</div>
+        <div class="tl-title">Catalyst Development &amp; System Validation</div>
+        <div class="tl-body">Heterogeneous catalyst optimisation for H₂ evolution rate and long-term stability. Redox mediator selection and cycling durability testing. Proprietary sulfur separation architecture development. Full techno-economic assessment and reactor modelling completed.</div>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <div class="tl-yr">2026 — 2027</div>
+        <div class="tl-title">5–25 kW Integrated Pilot Skid</div>
+        <div class="tl-body">Continuous-operation pilot unit integrating all three stages. System-level energy efficiency validation targeting 20–25 kWh/kg H₂. Sulfur product quality certification for industrial commodity markets. Catalyst turnover frequency and deactivation characterisation.</div>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <div class="tl-yr">2027 — 2028</div>
+        <div class="tl-title">Refinery Pilot — Modular SRU Replacement</div>
+        <div class="tl-body">Integration into a live refinery acid gas stream in partnership with industrial EPC and refinery operators. Drop-in SRU replacement demonstrated at operational scale. Hydrogen quality validation for direct injection into refinery H₂ network.</div>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <div class="tl-yr">2029 — 2030</div>
+        <div class="tl-title">Technology Licensing &amp; Commercial Deployment</div>
+        <div class="tl-body">Licensing model for global refinery operators. Catalyst manufacturing scale-up. Long-term optimisation pathway toward &lt;15 kWh/kg H₂ through advanced catalyst formulation and reactor integration improvements.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="ct-inner">
+    <div class="sec-tag reveal">Contact</div>
+    <h2 class="reveal">Let's talk refinery decarbonisation</h2>
+    <p class="reveal">Whether you are a refinery operator, EPC engineering partner, accelerator programme, or investor — we would be glad to hear from you.</p>
+    <div class="ct-box reveal">
+      <form id="ctForm">
+        <div class="fg-row">
+          <div class="fg"><label>First Name</label><input type="text" placeholder="John" required></div>
+          <div class="fg"><label>Last Name</label><input type="text" placeholder="Smith" required></div>
+        </div>
+        <div class="fg"><label>Email Address</label><input type="email" placeholder="john@company.com" required></div>
+        <div class="fg"><label>Organisation</label><input type="text" placeholder="Company / Institution"></div>
+        <div class="fg">
+          <label>I represent a…</label>
+          <select>
+            <option>Refinery Operator</option>
+            <option>EPC / Engineering Partner</option>
+            <option>Investor / Venture Capital</option>
+            <option>Accelerator / Programme</option>
+            <option>Research Institution</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Message</label><textarea placeholder="Tell us about your interest or collaboration idea…"></textarea></div>
+        <button type="submit" class="btn-sub">Send Message →</button>
+        <div class="ok-msg" id="okMsg">✓ Message received — we will be in touch shortly.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="ft-logo logo" href="#">
+    <span class="logo-word">Elemental</span><span class="logo-s">
+      <span class="s-atomnum">16</span>
+      <span class="s-letter">S</span>
+      <span class="s-mass">32.1</span>
+    </span>
+  </a>
+  <p class="ft-copy">© 2025 ElementalS · Pre-Incorporation · Redox-Mediated Catalytic H₂S Splitting</p>
+  <p class="ft-copy" style="opacity:0.55">Industrial Deep Tech · Refinery Decarbonisation</p>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if(e.isIntersecting){
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.07 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  document.getElementById('ctForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const msg = document.getElementById('okMsg');
+    msg.style.display = 'block';
+    this.reset();
+    setTimeout(() => { msg.style.display = 'none'; }, 5000);
+  });
+</script>
+</body>
+</html>
